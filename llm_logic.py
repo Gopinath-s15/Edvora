@@ -10,14 +10,21 @@ from typing import List, Dict, Any, Optional
 import openai
 from openai import AsyncOpenAI
 import re
+import requests
+import asyncio
 
 logger = logging.getLogger(__name__)
 
 class LLMDecisionEngine:
-    """Decision engine using OpenAI GPT-4 for policy reasoning and structured output"""
-    
-    def __init__(self, api_key: str):
-        self.client = AsyncOpenAI(api_key=api_key)
+    """Decision engine using OpenAI GPT or Hugging Face for policy reasoning and structured output"""
+
+    def __init__(self, api_key: str, use_huggingface: bool = False, hf_api_key: str = None):
+        self.use_huggingface = use_huggingface
+        if use_huggingface:
+            self.hf_api_key = hf_api_key
+            self.hf_url = "https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium"
+        else:
+            self.client = AsyncOpenAI(api_key=api_key)
         self.model_name = os.getenv("MODEL_NAME", "gpt-4")
         self.max_tokens = int(os.getenv("MAX_TOKENS", 2000))
         self.temperature = float(os.getenv("TEMPERATURE", 0.1))
@@ -27,6 +34,23 @@ class LLMDecisionEngine:
             'approved': ['approved', 'accept', 'eligible', 'covered', 'valid', 'allowed'],
             'rejected': ['rejected', 'deny', 'ineligible', 'not covered', 'invalid', 'not allowed']
         }
+
+    async def query_huggingface(self, prompt: str) -> str:
+        """Query Hugging Face API for text generation"""
+        headers = {"Authorization": f"Bearer {self.hf_api_key}"}
+        payload = {"inputs": prompt, "parameters": {"max_length": 200, "temperature": 0.1}}
+
+        def make_request():
+            response = requests.post(self.hf_url, headers=headers, json=payload)
+            return response.json()
+
+        # Run in thread pool to avoid blocking
+        loop = asyncio.get_event_loop()
+        result = await loop.run_in_executor(None, make_request)
+
+        if isinstance(result, list) and len(result) > 0:
+            return result[0].get('generated_text', prompt)
+        return "Unable to generate response"
         
     async def generate_decision(self, question: str, context_chunks: List[Dict[str, Any]], document_url: str) -> Dict[str, str]:
         """
@@ -49,8 +73,11 @@ class LLMDecisionEngine:
             # Create decision prompt
             prompt = self._create_decision_prompt(question, context_text, document_url)
             
-            # Generate response using GPT-4
-            response = await self._call_openai(prompt)
+            # Generate response using selected model
+            if self.use_huggingface:
+                response = await self.query_huggingface(prompt)
+            else:
+                response = await self._call_openai(prompt)
             
             # Parse and structure the response
             structured_decision = self._parse_decision_response(response, context_chunks)

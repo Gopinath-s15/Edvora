@@ -93,15 +93,25 @@ async def startup_event():
     logger.info("Initializing Edvora components...")
     
     try:
-        # Validate OpenAI API key
+        # Get API keys and configuration
         openai_api_key = os.getenv("OPENAI_API_KEY")
-        if not openai_api_key:
-            raise ValueError("OPENAI_API_KEY environment variable is required")
-        
+        use_huggingface = os.getenv("USE_HUGGINGFACE", "false").lower() == "true"
+        hf_api_key = os.getenv("HUGGINGFACE_API_KEY")
+
+        if not use_huggingface and not openai_api_key:
+            raise ValueError("OPENAI_API_KEY environment variable is required when not using Hugging Face")
+
+        if use_huggingface and not hf_api_key:
+            raise ValueError("HUGGINGFACE_API_KEY environment variable is required when using Hugging Face")
+
         # Initialize components
         document_processor = DocumentProcessor()
         retriever = DocumentRetriever()
-        llm_engine = LLMDecisionEngine(api_key=openai_api_key)
+        llm_engine = LLMDecisionEngine(
+            api_key=openai_api_key,
+            use_huggingface=use_huggingface,
+            hf_api_key=hf_api_key
+        )
         
         logger.info("Edvora components initialized successfully")
         
