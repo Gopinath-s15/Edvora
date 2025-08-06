@@ -23,6 +23,7 @@ class LLMDecisionEngine:
         if use_huggingface:
             self.hf_api_key = hf_api_key
             self.hf_url = "https://api-inference.huggingface.co/models/distilgpt2"
+            self.client = None  # Don't initialize OpenAI client
         else:
             self.client = AsyncOpenAI(api_key=api_key)
         self.model_name = os.getenv("MODEL_NAME", "gpt-4")
@@ -143,6 +144,8 @@ Return valid JSON only."""
     
     async def _call_openai(self, prompt: str) -> str:
         """Call OpenAI API with the decision prompt"""
+        if self.client is None:
+            raise Exception("OpenAI client not initialized - using fallback mode")
         try:
             response = await self.client.chat.completions.create(
                 model=self.model_name,
