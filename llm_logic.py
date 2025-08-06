@@ -81,7 +81,14 @@ class LLMDecisionEngine:
             if self.use_huggingface:
                 response = await self.query_huggingface(prompt)
             else:
-                response = await self._call_openai(prompt)
+                try:
+                    response = await self._call_openai(prompt)
+                except Exception as openai_error:
+                    if "quota" in str(openai_error).lower() or "429" in str(openai_error):
+                        logger.warning("OpenAI quota exceeded, falling back to rule-based response")
+                        response = await self.query_huggingface(prompt)
+                    else:
+                        raise openai_error
             
             # Parse and structure the response
             structured_decision = self._parse_decision_response(response, context_chunks)
