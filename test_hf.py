@@ -21,11 +21,11 @@ async def test_huggingface():
     print(f"🧪 Testing Hugging Face with key: {hf_api_key[:10]}...")
     
     headers = {"Authorization": f"Bearer {hf_api_key}"}
-    url = "https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium"
-    
+    url = "https://api-inference.huggingface.co/models/distilgpt2"
+
     payload = {
         "inputs": "Question: What is this document about? Answer:",
-        "parameters": {"max_length": 100, "temperature": 0.1}
+        "parameters": {"max_new_tokens": 50, "temperature": 0.1}
     }
     
     try:
