@@ -84,10 +84,13 @@ class LLMDecisionEngine:
                 try:
                     response = await self._call_openai(prompt)
                 except Exception as openai_error:
-                    if "quota" in str(openai_error).lower() or "429" in str(openai_error):
-                        logger.warning("OpenAI quota exceeded, falling back to rule-based response")
+                    error_str = str(openai_error).lower()
+                    if any(keyword in error_str for keyword in ["quota", "429", "insufficient_quota", "exceeded"]):
+                        logger.warning(f"OpenAI quota exceeded: {openai_error}")
+                        logger.info("Falling back to rule-based response")
                         response = await self.query_huggingface(prompt)
                     else:
+                        logger.error(f"Non-quota OpenAI error: {openai_error}")
                         raise openai_error
             
             # Parse and structure the response
