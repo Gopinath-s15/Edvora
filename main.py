@@ -95,15 +95,11 @@ async def startup_event():
     try:
         # Get API keys and configuration
         openai_api_key = os.getenv("OPENAI_API_KEY")
-        use_huggingface = os.getenv("USE_HUGGINGFACE", "true").lower() == "true"  # Default to true for quota issues
+        use_huggingface = True  # Force fallback mode for quota issues
         hf_api_key = os.getenv("HUGGINGFACE_API_KEY")
 
-        if not use_huggingface and not openai_api_key:
-            raise ValueError("OPENAI_API_KEY environment variable is required when not using Hugging Face")
-
-        if use_huggingface and not hf_api_key:
-            logger.warning("HUGGINGFACE_API_KEY not found, using dummy key for fallback")
-            hf_api_key = "dummy_key_for_fallback"
+        # Always use fallback mode to avoid quota issues
+        hf_api_key = "dummy_key_for_fallback"
 
         logger.info(f"Using Hugging Face fallback: {use_huggingface}")
 
