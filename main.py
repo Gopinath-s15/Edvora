@@ -95,14 +95,17 @@ async def startup_event():
     try:
         # Get API keys and configuration
         openai_api_key = os.getenv("OPENAI_API_KEY")
-        use_huggingface = os.getenv("USE_HUGGINGFACE", "false").lower() == "true"
+        use_huggingface = os.getenv("USE_HUGGINGFACE", "true").lower() == "true"  # Default to true for quota issues
         hf_api_key = os.getenv("HUGGINGFACE_API_KEY")
 
         if not use_huggingface and not openai_api_key:
             raise ValueError("OPENAI_API_KEY environment variable is required when not using Hugging Face")
 
         if use_huggingface and not hf_api_key:
-            raise ValueError("HUGGINGFACE_API_KEY environment variable is required when using Hugging Face")
+            logger.warning("HUGGINGFACE_API_KEY not found, using dummy key for fallback")
+            hf_api_key = "dummy_key_for_fallback"
+
+        logger.info(f"Using Hugging Face fallback: {use_huggingface}")
 
         # Initialize components
         document_processor = DocumentProcessor()
