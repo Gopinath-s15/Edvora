@@ -151,7 +151,7 @@ class DocumentRetriever:
             logger.error(f"Error creating FAISS index: {str(e)}")
             raise
     
-    async def retrieve_relevant_chunks(self, query: str, top_k: int = 5) -> List[Dict[str, Any]]:
+    async def retrieve_relevant_chunks(self, query: str, top_k: int = 3) -> List[Dict[str, Any]]:
         """
         Retrieve most relevant chunks for a query
         

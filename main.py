@@ -78,7 +78,7 @@ class AnswerResponse(BaseModel):
 
 class HackRxResponse(BaseModel):
     """Response model for /hackrx/run endpoint"""
-    answers: List[AnswerResponse] = Field(..., description="List of answers corresponding to questions")
+    answers: List[str] = Field(..., description="List of string answers corresponding to questions")
 
 # Global components (initialized on startup)
 document_processor = None
@@ -178,8 +178,10 @@ async def hackrx_run(request: HackRxRequest):
                 context_chunks=relevant_chunks,
                 document_url=request.documents
             )
-            
-            answers.append(AnswerResponse(**decision_result))
+
+            # Create simple string answer
+            answer_text = f"{decision_result.get('decision', 'Unknown')} - {decision_result.get('justification', 'No justification provided')}"
+            answers.append(answer_text)
         
         logger.info(f"Successfully processed {len(answers)} questions")
         

@@ -81,39 +81,22 @@ class LLMDecisionEngine:
     def _create_decision_prompt(self, question: str, context: str, document_url: str) -> str:
         """Create comprehensive prompt for decision generation"""
         
-        prompt = f"""You are an expert AI assistant for document analysis and policy reasoning. You are analyzing a document from {document_url} to answer specific questions about policies, claims, or decisions.
-
-TASK: Analyze the provided document context and answer the question with a structured decision.
+        prompt = f"""Analyze document and answer question. Return JSON only.
 
 QUESTION: {question}
 
-DOCUMENT CONTEXT:
+CONTEXT:
 {context}
 
-INSTRUCTIONS:
-1. Carefully analyze the document context to understand the relevant policies, rules, and conditions
-2. Determine if the question relates to an approval/rejection decision
-3. Extract any monetary amounts mentioned in relation to the question
-4. Provide clear justification based on the document content
-5. Identify the specific clause or section that supports your decision
-
-REQUIRED OUTPUT FORMAT (JSON):
+OUTPUT FORMAT:
 {{
-    "decision": "Approved" or "Rejected" (based on the analysis),
-    "amount": "₹X,XXX" (extract any relevant amount in Indian Rupees format, or "Not specified" if no amount),
-    "justification": "Detailed explanation of the decision based on the document policies and context. Include specific reasoning and policy interpretation.",
-    "source_clause": "Quote the specific clause, section, or text from the document that supports this decision"
+    "decision": "Approved/Rejected",
+    "amount": "₹X,XXX or Not specified",
+    "justification": "Brief explanation based on document",
+    "source_clause": "Relevant quote from document"
 }}
 
-DECISION GUIDELINES:
-- If the document supports the request/claim/application, use "Approved"
-- If the document does not support or explicitly denies the request, use "Rejected"
-- If unclear, lean towards "Rejected" and explain why more information is needed
-- Always base decisions on the actual document content, not assumptions
-- Extract amounts in Indian Rupees format (₹X,XXX) when mentioned
-- Quote exact text from the document for source_clause
-
-IMPORTANT: Respond ONLY with the JSON object. Do not include any other text or explanations outside the JSON."""
+Return valid JSON only."""
 
         return prompt
     
