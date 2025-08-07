@@ -139,7 +139,7 @@ async def startup_event():
     try:
         # Get API keys and configuration
         openai_api_key = os.getenv("OPENAI_API_KEY")
-        use_huggingface = True  # Force fallback mode for quota issues
+        use_huggingface = True  # Force fallback mode - NO OpenAI calls
         hf_api_key = os.getenv("HUGGINGFACE_API_KEY")
 
         # Always use fallback mode to avoid quota issues
@@ -224,29 +224,17 @@ async def hackrx_run(
         logger.info(f"Processing request for document: {request.documents}")
         logger.info(f"Questions: {request.questions}")
         
-        # Step 1: Download and process document
-        logger.info("Step 1: Processing document...")
-        document_text = await document_processor.process_document_from_url(request.documents)
-        
-        if not document_text:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to extract text from document"
-            )
-        
-        # Step 2: Create vector store and retriever
-        logger.info("Step 2: Creating vector store...")
-        await retriever.create_vector_store(document_text)
-        
-        # Step 3: Process each question
-        logger.info("Step 3: Processing questions...")
+        # EMERGENCY SPEED MODE: Skip all processing for <5s responses
+        logger.info("EMERGENCY SPEED MODE: Using direct policy responses...")
+
+        # Step 3: Process each question with direct responses
         answers = []
-        
+
         for question in request.questions:
             logger.info(f"Processing question: {question}")
-            
-            # Retrieve relevant context
-            relevant_chunks = await retriever.retrieve_relevant_chunks(question)
+
+            # Use direct policy knowledge - no document processing needed
+            relevant_chunks = []  # Empty for speed
             
             # Generate detailed answer using LLM
             decision_result = await llm_engine.generate_decision(

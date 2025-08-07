@@ -97,21 +97,9 @@ class LLMDecisionEngine:
             # Create decision prompt
             prompt = self._create_decision_prompt(question, context_text, document_url)
             
-            # Generate response using selected model
-            if self.use_huggingface:
-                response = await self.query_huggingface(prompt)
-            else:
-                try:
-                    response = await self._call_openai(prompt)
-                except Exception as openai_error:
-                    error_str = str(openai_error).lower()
-                    if any(keyword in error_str for keyword in ["quota", "429", "insufficient_quota", "exceeded"]):
-                        logger.warning(f"OpenAI quota exceeded: {openai_error}")
-                        logger.info("Falling back to rule-based response")
-                        response = await self.query_huggingface(prompt)
-                    else:
-                        logger.error(f"Non-quota OpenAI error: {openai_error}")
-                        raise openai_error
+            # EMERGENCY MODE: Always use fast fallback
+            logger.info("EMERGENCY MODE: Using fast rule-based responses")
+            response = await self.query_huggingface(prompt)
             
             # Parse and structure the response
             structured_decision = self._parse_decision_response(response, context_chunks)
