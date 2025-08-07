@@ -1,14 +1,20 @@
-# Edvora - AI-Powered Document Reasoning System
+# HackRx 6.0 - Bajaj Finserv AI Document Processing API
 
-## Overview
-Edvora is an AI-powered Document Reasoning System built for the Bajaj HackRx 2025 Hackathon. It implements a Retrieval-Augmented Generation (RAG) pipeline using LangChain, FAISS, and OpenAI GPT-4 to process documents and answer natural language queries with explainable decisions.
+## 🏆 Official Submission for Bajaj Finserv HackRx 6.0 Competition
 
-## Features
-- **Document Processing**: Supports PDF and DOCX files from URLs
-- **RAG Pipeline**: Advanced retrieval-augmented generation with FAISS vector store
-- **Explainable AI**: Provides transparent decisions with source clause references
-- **FastAPI Backend**: Production-ready API with async processing
-- **Compliance**: 100% compliant with HackRx API specifications
+This is a production-ready AI-powered document processing system specifically built for the HackRx 6.0 competition. It implements advanced RAG (Retrieval-Augmented Generation) pipeline with FAISS vector store and OpenAI GPT-4 to analyze insurance policy documents and provide accurate, detailed answers to natural language queries.
+
+## 🎯 HackRx 6.0 Compliance Features
+
+- ✅ **Official `/hackrx/run` Endpoint**: Exact API specification compliance
+- ✅ **Bearer Token Authentication**: Secure API access as required
+- ✅ **Policy Document Analysis**: Specialized for insurance policy understanding
+- ✅ **Detailed Answer Generation**: Comprehensive responses with policy specifics
+- ✅ **HTTPS Deployment**: Production-ready on Render platform
+- ✅ **Sub-30s Response Time**: Optimized for competition requirements
+- ✅ **RAG Pipeline**: Advanced document retrieval and generation
+- ✅ **Vector Search**: FAISS-powered semantic search
+- ✅ **GPT-4 Integration**: State-of-the-art language model
 
 ## Project Structure
 ```
@@ -24,30 +30,44 @@ edvora/
     └── test_examples.py
 ```
 
-## API Specification
+## 🔗 Official HackRx 6.0 API Specification
 
-### Endpoint: `/hackrx/run`
+### 🎯 Submission URL
+```
+https://edvora-api.onrender.com/hackrx/run
+```
+
+### 📋 Endpoint: `/hackrx/run`
 **Method**: POST
+**Authentication**: Bearer Token Required
 
-**Input Format**:
+**Request Headers**:
+```
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer <api_key>
+```
+
+**Request Format** (Official HackRx Example):
 ```json
 {
-  "documents": "<url_to_pdf_or_docx>",
-  "questions": ["natural language query about the document"]
+    "documents": "https://hackrx.blob.core.windows.net/assets/policy.pdf?sv=2023-01-03&st=2025-07-04T09%3A11%3A24Z&se=2027-07-05T09%3A11%3A00Z&sr=b&sp=r&sig=N4a9OU0w0QXO6AOIBiu4bpl7AXvEZogeT%2FjUHNO7HzQ%3D",
+    "questions": [
+        "What is the grace period for premium payment under the National Parivar Mediclaim Plus Policy?",
+        "What is the waiting period for pre-existing diseases (PED) to be covered?",
+        "Does this policy cover maternity expenses, and what are the conditions?"
+    ]
 }
 ```
 
-**Output Format**:
+**Response Format** (Official HackRx Example):
 ```json
 {
-  "answers": [
-    {
-      "decision": "Approved/Rejected",
-      "amount": "₹50,000",
-      "justification": "Detailed explanation with policy reasoning",
-      "source_clause": "Specific clause reference from document"
-    }
-  ]
+    "answers": [
+        "A grace period of thirty days is provided for premium payment after the due date to renew or continue the policy without losing continuity benefits.",
+        "There is a waiting period of thirty-six (36) months of continuous coverage from the first policy inception for pre-existing diseases and their direct complications to be covered.",
+        "Yes, the policy covers maternity expenses, including childbirth and lawful medical termination of pregnancy. To be eligible, the female insured person must have been continuously covered for at least 24 months. The benefit is limited to two deliveries or terminations during the policy period."
+    ]
 }
 ```
 

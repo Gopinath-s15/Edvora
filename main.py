@@ -1,13 +1,15 @@
 """
-Edvora - AI-Powered Document Reasoning System
-Main FastAPI application for Bajaj HackRx 2025 Hackathon
+HackRx 6.0 - Bajaj Finserv AI Document Processing API
+Official submission for Bajaj Finserv HackRx 6.0 Competition
+Compliant with official API specifications and requirements
 """
 
 import os
 import logging
 from typing import List, Dict, Any
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, status, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field, validator
 import uvicorn
 from dotenv import load_dotenv
@@ -26,14 +28,17 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Initialize FastAPI app
+# Initialize FastAPI app according to HackRx 6.0 specifications
 app = FastAPI(
-    title="Edvora - AI Document Reasoning System",
-    description="AI-powered Document Reasoning System for Bajaj HackRx 2025",
+    title="HackRx 6.0 - Bajaj Finserv AI Document Processing API",
+    description="Official submission for Bajaj Finserv HackRx 6.0 Competition - AI-powered document analysis with policy understanding",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc"
 )
+
+# Security scheme for Bearer token authentication
+security = HTTPBearer()
 
 # Add CORS middleware
 app.add_middleware(
@@ -44,12 +49,40 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Pydantic models for request/response
+# Authentication function
+async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Verify Bearer token authentication as per HackRx requirements"""
+    # For HackRx competition, we accept any valid Bearer token format
+    # In production, this would validate against a proper auth service
+    if not credentials.credentials:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return credentials.credentials
+
+# Pydantic models for request/response according to HackRx 6.0 specifications
 class HackRxRequest(BaseModel):
-    """Request model for /hackrx/run endpoint"""
-    documents: str = Field(..., description="URL to PDF or DOCX document")
-    questions: List[str] = Field(..., description="List of natural language queries")
-    
+    """
+    Official HackRx 6.0 request model for /hackrx/run endpoint
+    Matches exact specification from competition documentation
+    """
+    documents: str = Field(
+        ...,
+        description="URL to policy document (PDF format)",
+        example="https://hackrx.blob.core.windows.net/assets/policy.pdf?sv=2023-01-03&st=2025-07-04T09%3A11%3A24Z&se=2027-07-05T09%3A11%3A00Z&sr=b&sp=r&sig=N4a9OU0w0QXO6AOIBiu4bpl7AXvEZogeT%2FjUHNO7HzQ%3D"
+    )
+    questions: List[str] = Field(
+        ...,
+        description="List of natural language queries about the policy document",
+        example=[
+            "What is the grace period for premium payment under the National Parivar Mediclaim Plus Policy?",
+            "What is the waiting period for pre-existing diseases (PED) to be covered?",
+            "Does this policy cover maternity expenses, and what are the conditions?"
+        ]
+    )
+
     @validator('documents')
     def validate_document_url(cls, v):
         if not v or not isinstance(v, str):
@@ -77,8 +110,19 @@ class AnswerResponse(BaseModel):
     source_clause: str = Field(..., description="Specific clause reference from document")
 
 class HackRxResponse(BaseModel):
-    """Response model for /hackrx/run endpoint"""
-    answers: List[str] = Field(..., description="List of string answers corresponding to questions")
+    """
+    Official HackRx 6.0 response model for /hackrx/run endpoint
+    Matches exact specification from competition documentation
+    """
+    answers: List[str] = Field(
+        ...,
+        description="List of detailed answers corresponding to each question in the same order",
+        example=[
+            "A grace period of thirty days is provided for premium payment after the due date to renew or continue the policy without losing continuity benefits.",
+            "There is a waiting period of thirty-six (36) months of continuous coverage from the first policy inception for pre-existing diseases and their direct complications to be covered.",
+            "Yes, the policy covers maternity expenses, including childbirth and lawful medical termination of pregnancy. To be eligible, the female insured person must have been continuously covered for at least 24 months."
+        ]
+    )
 
 # Global components (initialized on startup)
 document_processor = None
@@ -120,17 +164,25 @@ async def startup_event():
 
 @app.get("/")
 async def root():
-    """Root endpoint with system information"""
+    """Root endpoint with HackRx 6.0 system information"""
     return {
-        "message": "Edvora - AI-Powered Document Reasoning System",
+        "message": "HackRx 6.0 - Bajaj Finserv AI Document Processing API",
+        "competition": "Bajaj Finserv HackRx 6.0",
         "version": "1.0.0",
         "status": "active",
-        "hackathon": "Bajaj HackRx 2025",
+        "team": "Your Team Name",  # Replace with actual team name
+        "description": "AI-powered document analysis system for insurance policy understanding",
         "endpoints": {
             "main": "/hackrx/run",
             "docs": "/docs",
             "health": "/health"
-        }
+        },
+        "tech_stack": [
+            "FastAPI",
+            "OpenAI GPT-4",
+            "FAISS Vector Store",
+            "RAG Pipeline"
+        ]
     }
 
 @app.get("/health")
@@ -146,12 +198,27 @@ async def health_check():
     }
 
 @app.post("/hackrx/run", response_model=HackRxResponse)
-async def hackrx_run(request: HackRxRequest):
+async def hackrx_run(
+    request: HackRxRequest,
+    token: str = Depends(verify_token)
+):
     """
-    Main endpoint for document reasoning as per HackRx specifications
-    
-    Processes documents from URLs and answers natural language queries
-    with explainable AI decisions and source clause references.
+    Official HackRx 6.0 endpoint for AI document processing
+
+    This endpoint processes insurance policy documents and answers natural language
+    queries with detailed, accurate responses based on document content.
+
+    Authentication: Requires Bearer token in Authorization header
+
+    Request Format:
+    - documents: URL to policy document (PDF format)
+    - questions: Array of natural language questions about the policy
+
+    Response Format:
+    - answers: Array of detailed answers corresponding to each question
+
+    The system uses advanced RAG (Retrieval-Augmented Generation) pipeline
+    with FAISS vector store and OpenAI GPT-4 for accurate document understanding.
     """
     try:
         logger.info(f"Processing request for document: {request.documents}")
@@ -181,15 +248,31 @@ async def hackrx_run(request: HackRxRequest):
             # Retrieve relevant context
             relevant_chunks = await retriever.retrieve_relevant_chunks(question)
             
-            # Generate decision using LLM
+            # Generate detailed answer using LLM
             decision_result = await llm_engine.generate_decision(
                 question=question,
                 context_chunks=relevant_chunks,
                 document_url=request.documents
             )
 
-            # Create simple string answer
-            answer_text = f"{decision_result.get('decision', 'Unknown')} - {decision_result.get('justification', 'No justification provided')}"
+            # Extract detailed answer for HackRx format
+            if isinstance(decision_result, dict):
+                # Combine decision and justification into a comprehensive answer
+                decision = decision_result.get('decision', '')
+                justification = decision_result.get('justification', '')
+                source_clause = decision_result.get('source_clause', '')
+
+                # Create detailed policy-specific answer
+                if justification and decision:
+                    answer_text = f"{justification}"
+                    if source_clause:
+                        answer_text += f" {source_clause}"
+                else:
+                    answer_text = decision or justification or "Unable to determine answer from the document."
+            else:
+                # Fallback for string responses
+                answer_text = str(decision_result)
+
             answers.append(answer_text)
         
         logger.info(f"Successfully processed {len(answers)} questions")
